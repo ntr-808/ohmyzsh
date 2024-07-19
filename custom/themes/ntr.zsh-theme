@@ -16,11 +16,34 @@ kube_txt() {
   fi
 }
 
-PROMPT='%{$fg[cyan]%}%~%{$reset_color%} $(kube_txt)$(git_prompt_info)-> ' 
+parse_git_dirty() {
+  [[ $(git status 2> /dev/null | tail -n1) != "nothing to commit, working tree clean" ]] && echo "*"
+}
 
-ZSH_THEME_GIT_PROMPT_PREFIX="git:%{$fg_bold[magenta]%}"
-ZSH_THEME_GIT_PROMPT_BRANCH=""
-ZSH_THEME_GIT_PROMPT_DIRTY="*"
-ZSH_THEME_GIT_PROMPT_CLEAN=""
-ZSH_THEME_GIT_PROMPT_SUFFIX="%{$reset_color%} "
+shorten_git_branch() {
+  local branch_name="$1"
+  if [[ ${#branch_name} -gt 20 ]]; then
+    local shortened="${branch_name:0:20}"
+    local rest="${branch_name:20}"
+    local index=$(echo "$rest" | grep -bo '-' | head -n1 | cut -d: -f1)
+    if [[ -n "$index" ]]; then
+      echo "${branch_name:0:20+index}"
+    else
+      echo "$shortened..."
+    fi
+  else
+    echo "$branch_name"
+  fi
+}
+
+parse_git_branch() {
+  if git rev-parse --is-inside-work-tree &> /dev/null; then
+    local branch=$(git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/')
+    echo "git:%{$fg_bold[magenta]%}$(shorten_git_branch $branch)$(parse_git_dirty)%{$reset_color%} "
+  else
+    echo ""
+  fi
+}
+
+PROMPT='%{$fg_bold[green]%}%~%{$reset_color%} $(kube_txt)$(parse_git_branch)-> ' 
 

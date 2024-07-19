@@ -72,5 +72,7 @@ DISABLE_UNTRACKED_FILES_DIRTY="true"
 # Add wisely, as too many plugins slow down shell startup.
 plugins=(git kubectx python)
 
+export PYTHON_AUTO_VRUN=true
+
 source $ZSH/oh-my-zsh.sh
 
